@@ -1,0 +1,37 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+      - name: Run attack-simulation unit tests
+        run: gradle :rewardshield:testDebugUnitTest
+      - name: Build sample APK
+        run: gradle :sample:assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rewardshield-sample-debug
+          path: sample/build/outputs/apk/debug/*.apk
+
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest cryptography requests
+      - run: python -m pytest -q server/tests
