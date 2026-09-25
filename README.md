@@ -55,3 +55,25 @@ simulates a skipped ad.
 ## Build
 
 Open the project in Android Studio (AGP 8.5, Kotlin 1.9, JDK 17) and run `:sample`.
+
+## Verifying the defenses (attack simulation)
+
+Every attack an ad skipper uses is reproduced as an automated test that runs against
+RewardShield itself. This checks the defenses without a skipper that works on real games.
+
+- `rewardshield/src/test/.../SkipperAttackTest.kt`: fake clocks simulate speed hacks on
+  individual clocks, forged, early and replayed reward callbacks, and waiting out an ad
+  in the background. Run with `./gradlew :rewardshield:test`.
+- `server/tests/test_ssv_attacks.py`: forged signatures, a tampered reward amount, a
+  missing signature, replays and stale callbacks. Run with `python -m pytest server/tests`.
+
+**Known gap (documented by a test):** a speed hack that hooks all three clocks
+consistently passes the on-device checks. Only SSV stops it, so always grant rewards
+on the server.
+
+To test the device checks (`EnvironmentChecks`), install the real tooling on a
+**test device you own** and confirm each signal fires in the sample app:
+- Enable any third-party accessibility service → `accessibility_service`
+- Run `frida-server` → `frida_port`, `hook_framework`
+- Use a Magisk/KernelSU-rooted device or an emulator → `root` or `emulator`
+- Attach Android Studio's debugger → `debugger`
